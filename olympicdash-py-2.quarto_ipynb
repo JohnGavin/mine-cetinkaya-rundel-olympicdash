@@ -1,0 +1,211 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "---\n",
+        "title: \"Olympic Games\"\n",
+        "format: \n",
+        "  dashboard:\n",
+        "    orientation: columns\n",
+        "    nav-buttons: [github]\n",
+        "    github: https://github.com/posit-conf-2024/olympicdash\n",
+        "logo: images/olympics-logo.svg\n",
+        "logo-alt: \"Olympics logo with multicolored circles.\"\n",
+        "---"
+      ],
+      "id": "69f11675"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: load-packages\n",
+        "from plotnine import *\n",
+        "import great_tables as gt\n",
+        "import pandas as pd"
+      ],
+      "id": "load-packages",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: load-data\n",
+        "olympics_full = pd.read_csv(\"data/olympics.csv\", low_memory = False)"
+      ],
+      "id": "load-data",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: prep-data\n",
+        "\n",
+        "# Filter for Summer season and non-NA medals\n",
+        "olympics = olympics_full[(olympics_full[\"season\"] == \"Summer\") & (olympics_full[\"medal\"].notna())]\n",
+        "\n",
+        "# Split the team column at \"-\" into two columns\n",
+        "split_data = olympics[\"team\"].str.split(\"-\", n = 1, expand = True)\n",
+        "olympics.loc[:, \"team\"] = split_data[0]\n",
+        "\n",
+        "# Reorder the medal column categories\n",
+        "olympics[\"medal\"] = pd.Categorical(olympics[\"medal\"], categories = [\"Bronze\", \"Silver\", \"Gold\"])"
+      ],
+      "id": "prep-data",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Column - Medals by sport and year\n",
+        "\n",
+        "### Row - Medals by sport {height=\"60%\"}\n"
+      ],
+      "id": "af4906f8"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "title": "Medals by sport"
+      },
+      "source": [
+        "#| label: medals-by-sport\n",
+        "\n",
+        "# Lump the sport column to top 15 categories, grouping others as Other\n",
+        "top_15_sports = olympics[\"sport\"].value_counts().nlargest(15).index\n",
+        "olympics[\"sport\"] = olympics[\"sport\"].apply(lambda x: x if x in top_15_sports else \"Other\")\n",
+        "\n",
+        "# Convert the sport column to a categorical type with order based on frequency, and reverse the order\n",
+        "olympics[\"sport\"] = pd.Categorical(olympics[\"sport\"], categories = olympics[\"sport\"].value_counts().index[::-1])\n",
+        "\n",
+        "# Move the Other category of the sport column to the beginning\n",
+        "new_order = [\"Other\"] + [cat for cat in olympics[\"sport\"].cat.categories if cat != \"Other\"]\n",
+        "olympics[\"sport\"] = olympics[\"sport\"].cat.reorder_categories(new_order)\n",
+        "\n",
+        "# Plot\n",
+        "(\n",
+        "    ggplot(olympics, aes(x = \"sport\", fill = \"medal\")) +\n",
+        "    geom_bar() +\n",
+        "    coord_flip() +\n",
+        "    guides(fill = guide_legend(reverse = True)) +\n",
+        "    labs(\n",
+        "        x = \"\",\n",
+        "        y = \"\",\n",
+        "        fill = \"Medal\"\n",
+        "    ) +\n",
+        "    theme_minimal() +\n",
+        "    theme(\n",
+        "        legend_position = \"inside\",\n",
+        "        legend_position_inside = (0.9, 0.2),\n",
+        "        legend_direction = \"horizontal\",\n",
+        "        legend_background = element_rect(fill = \"white\", color = \"gray\"),\n",
+        "        figure_size = (10, 6.18)\n",
+        "    )\n",
+        ")"
+      ],
+      "id": "medals-by-sport",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "### Row - Medals by year {height=\"40%\"}\n"
+      ],
+      "id": "e873e8be"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "title": "Medals by year"
+      },
+      "source": [
+        "#| label: medals-by-year\n",
+        "\n",
+        "# Count the occurrences of each medal per year\n",
+        "olympics_count = olympics.groupby([\"year\", \"medal\"], observed=True).size().reset_index(name = \"n\")\n",
+        "\n",
+        "# Plot\n",
+        "(\n",
+        "    ggplot(olympics_count, aes(x = \"year\", y = \"n\", color = \"medal\")) +\n",
+        "    geom_point(size = 0.5) +\n",
+        "    geom_line() +\n",
+        "    guides(color = guide_legend(reverse = True)) + \n",
+        "    scale_x_continuous(breaks = range(1896, 2020, 8)) +\n",
+        "    labs(x = \"Year\", y = \"\", color = \"Medal\") +\n",
+        "    theme_minimal() +\n",
+        "    theme(\n",
+        "        legend_position = \"inside\",\n",
+        "        legend_position_inside = (0.9, 0.2),\n",
+        "        legend_direction = \"horizontal\",\n",
+        "        legend_background = element_rect(fill = \"white\", color = \"gray\"),\n",
+        "        figure_size = (10, 3)\n",
+        "    )\n",
+        ")"
+      ],
+      "id": "medals-by-year",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Column - Medals by country\n"
+      ],
+      "id": "6d1d08d3"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "title": "Medals by country"
+      },
+      "source": [
+        "#| label: medals-by-country\n",
+        "# Count the occurrences of each medal per team\n",
+        "olympics_count = olympics.groupby([\"team\", \"medal\"]).size().reset_index(name=\"n\")\n",
+        "\n",
+        "# Pivot olympics_count to get medals as columns\n",
+        "olympics_pivot = olympics_count.pivot_table(index = \"team\", columns = \"medal\", values = \"n\", fill_value = 0)\n",
+        "\n",
+        "# Calculate the total number of medals\n",
+        "olympics_pivot[\"Total\"] = olympics_pivot[[\"Bronze\", \"Gold\", \"Silver\"]].sum(axis=1)\n",
+        "\n",
+        "# Reset the index and rearrange columns\n",
+        "olympics_pivot = olympics_pivot.reset_index()\n",
+        "olympics_pivot = olympics_pivot[[\"team\", \"Gold\", \"Silver\", \"Bronze\", \"Total\"]]\n",
+        "\n",
+        "# Sort by Total medals, then team\n",
+        "olympics_pivot = olympics_pivot.sort_values(by=[\"Total\", \"team\"], ascending=[False, True])\n",
+        "\n",
+        "# Rename the team column to Team\n",
+        "olympics_pivot.rename(columns={\"team\": \"Team\"}, inplace=True)\n",
+        "\n",
+        "(\n",
+        "    gt.GT(olympics_pivot)\n",
+        ")"
+      ],
+      "id": "medals-by-country",
+      "execution_count": null,
+      "outputs": []
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+}
