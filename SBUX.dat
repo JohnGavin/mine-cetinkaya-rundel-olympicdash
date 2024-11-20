@@ -1,0 +1,4 @@
+20241119 17:05:55.548892 4 2 1 300 Can't find EId with tickerId:1 
+20241119 17:05:55.549235 4 2 1 354 Requested market data is not subscribed. 
+20241119 17:05:55.549395 4 2 1 300 Can't find EId with tickerId:1 
+20241119 17:05:55.729429 4 2 1 10089 Requested market data requires additional subscription for API. See link in 'Market Data Connections' dialog for more details.Delayed market data is available.SBUX NASDAQ.NMS/TOP/ALL 

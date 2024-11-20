@@ -1,6 +1,15 @@
 ---
 title: "Olympic Games"
-format: html
+format:
+  dashboard:
+    scrolling: false
+    orientation: columns
+    nav-buttons: [github]
+    github: https://github.com/JohnGavin/mine-cetinkaya-rundel-olympicdash
+logo: images/olympics-logo.svg
+logo-alt: Olympics logo - 5 rings
+callout-appearance: default # default minimal simple
+callout-icon: true
 ---
 
 ```{r}
@@ -9,6 +18,81 @@ format: html
 library(tidyverse)
 library(gt)
 ```
+# test pg
+
+## Row {.tabset}
+
+### note
+
+::: {#nte-example .callout-note}
+#| title: callout-note
+Note that there are five types of callouts, including:
+`note`, `warning`, `important`, `tip`, and `caution`.
+:::
+
+::: {#nte-example2 .callout-note icon=false}
+#| title: callout-note2
+
+### Pay Attention
+
+Using callouts is an effective way to highlight content that your reader give special consideration or attention.
+
+:::
+
+
+### tip
+
+::: {#tip-example .callout-tip}
+#| title: callout-tip
+### Cross-Referencing a Tip
+
+Add an ID starting with `#tip-` to reference a tip.
+:::
+
+See @tip-example...
+
+::: {.callout-tip  collapse="true"}
+#| title: callout-tip
+## Tip with Title
+
+This is an example of a callout with a title.
+:::
+
+
+### caution
+
+::: {#cau-example .callout-caution collapse="true"}
+#| title: callout-caution
+
+## Expand To Learn About Collapse
+
+This is an example of a 'folded' caution callout that can be expanded by the user. You can use `collapse="true"` to collapse it by default or `collapse="false"` to make a collapsible callout that is expanded by default.
+:::
+
+### important
+
+::: {#imp-example .callout-important collapse="true"}
+#| title: callout-important
+
+## Expand To Learn About important
+
+This is an example of a 'folded' important callout that can be expanded by the user.
+:::
+
+### warning
+
+::: {#wrn-example .callout-warning collapse="true"}
+#| title: callout-warning
+
+## Expand To Learn About warning
+
+This is an example of a 'folded' important callout that can be expanded by the user.
+:::
+
+
+
+
+# Olympic Games
 
 ```{r}
 #| label: load-data
@@ -18,25 +102,29 @@ olympics_full <- read_csv("data/olympics.csv")
 
 ```{r}
 #| label: prep-data
-olympics <- olympics_full |>
+olympics <-
+  olympics_full |>
   filter(
     season == "Summer",
     !is.na(medal)
   ) |>
   separate_wider_delim(
-    cols = team, 
-    names = c("team", "suffix"), 
-    delim = "-", 
-    too_many = "merge", 
+    cols = team,
+    names = c("team", "suffix"),
+    delim = "-",
+    too_many = "merge",
     too_few = "align_start"
   ) |>
   select(-suffix) |>
   mutate(medal = fct_relevel(medal, "Bronze", "Silver", "Gold"))
 ```
 
-## Medals by sport
+
+## Columns
+### Row - Medals by sport {height="80%"}
 
 ```{r}
+#| title: Medals by sport
 olympics |>
   mutate(
     sport = fct_lump_n(sport, n = 15),
@@ -61,9 +149,10 @@ olympics |>
   )
 ```
 
-## Medals by year
+### Row - Medals by year {height="20%"}
 
 ```{r}
+#| title: Medals by year
 olympics |>
   count(year, medal) |>
   ggplot(aes(x = year, y = n, color = medal)) +
@@ -88,6 +177,7 @@ olympics |>
 ## Medals by country
 
 ```{r}
+#| title: Medals by country
 olympics |>
   count(team, medal) |>
   pivot_wider(names_from = medal, values_from = n, values_fill = 0) |>
@@ -96,3 +186,13 @@ olympics |>
   arrange(desc(Total), Team) |>
   gt()
 ```
+
+
+## Row asdf
+
+See @nte-example...\
+See @tip-example...\
+See @nte-example2 ...\
+See @cau-example ...\
+See @imp-example ...\
+See @wrn-example ...\
